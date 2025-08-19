@@ -1,11 +1,25 @@
+import { useState } from "react";
 import { NewsCard } from "../components/NewsCard";
 import { SearchBar } from "../components/SearchBar";
 import { LoadingCard } from "../components/LoadingCard";
 import { useNews } from "../hooks/useNews";
 import { Newspaper, Sparkles } from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink } from "../components/ui/pagination";
+
 
 const Index = () => {
   const { articles, loading, searchNews } = useNews();
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 6;
+
+  // hitung index untuk slice
+  const indexOfLastArticle = currentPage * articlesPerPage;
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+  const currentArticles = articles.slice(indexOfFirstArticle, indexOfLastArticle);
+
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,19 +54,68 @@ const Index = () => {
             ))}
           </div>
         ) : articles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article) => (
-              <NewsCard
-                key={article.id}
-                title={article.title}
-                description={article.description}
-                url={article.url}
-                publishedAt={article.publishedAt}
-                source={article.source}
-                imageUrl={article.imageUrl}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentArticles.map((article) => (
+                <NewsCard
+                  key={article.id}
+                  title={article.title}
+                  description={article.description}
+                  url={article.url}
+                  publishedAt={article.publishedAt}
+                  source={article.source}
+                  imageUrl={article.imageUrl}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <Pagination className="mt-6">
+        <PaginationContent>
+          {/* Tombol Previous */}
+          <PaginationItem>
+            <PaginationPrevious
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                if (currentPage > 1) setCurrentPage(currentPage - 1)
+              }}
+            />
+          </PaginationItem>
+
+          {/* Nomor halaman */}
+          {[...Array(totalPages)].map((_, index) => (
+            <PaginationItem key={index}>
+              <PaginationLink
+                href="#"
+                isActive={currentPage === index + 1}
+                onClick={(e) => {
+                  e.preventDefault()
+                  setCurrentPage(index + 1)
+                }}
+              >
+                {index + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+
+          {/* Tombol Next */}
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+              }}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

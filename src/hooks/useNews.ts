@@ -10,110 +10,132 @@ export interface NewsArticle {
   imageUrl?: string;
 }
 
+const API_KEYS = {
+  newsdata: import.meta.env.VITE_NEWSDATA_API_KEY,
+  newsapi: import.meta.env.VITE_NEWSAPI_KEY,
+  gnews: import.meta.env.VITE_GNEWS_API_KEY,
+};
+
+const ITEMS_PER_PAGE = 6;
+
 export const useNews = () => {
+  const [allArticles, setAllArticles] = useState<NewsArticle[]>([]);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Data Dummy nnti diganti dengan API
-  const mockNews: NewsArticle[] = [
-    {
-      id: "1",
-      title: "OpenAI Releases Revolutionary GPT-5 Model with Advanced Reasoning Capabilities",
-      description: "The latest iteration of ChatGPT shows unprecedented improvements in logical reasoning and complex problem-solving across multiple domains.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      source: "TechCrunch",
-      imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "2", 
-      title: "Google DeepMind Breakthrough in Protein Folding Leads to New Drug Discoveries",
-      description: "AlphaFold 3 enables researchers to predict protein structures with 99.7% accuracy, accelerating pharmaceutical research.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      source: "Nature",
-      imageUrl: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "3",
-      title: "Meta Introduces Advanced AI-Powered AR Glasses for Consumer Market",
-      description: "The new Meta Ray-Ban Smart Glasses 2.0 feature real-time AI translation and contextual information overlay.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      source: "The Verge",
-      imageUrl: "https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "4",
-      title: "Tesla's Full Self-Driving AI Achieves Level 5 Autonomy in Controlled Tests",
-      description: "Extensive testing shows Tesla's FSD v12 successfully navigating complex urban environments without human intervention.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      source: "Reuters",
-      imageUrl: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "5",
-      title: "Microsoft Copilot Gets Major Update with Enhanced Code Generation",
-      description: "GitHub Copilot now supports 15 new programming languages and can generate complete applications from natural language descriptions.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
-      source: "GitHub Blog",
-      imageUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "6",
-      title: "AI-Powered Climate Model Predicts Weather Patterns 14 Days in Advance",
-      description: "Scientists develop neural network that outperforms traditional meteorological models in accuracy and computational efficiency.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      source: "Science",
-      imageUrl: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "7",
-      title: "Anthropic's Claude 3 Demonstrates Human-Level Performance on Complex Reasoning Tasks",
-      description: "New benchmark tests show Claude 3 matching human experts in mathematical proofs and scientific literature analysis.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
-      source: "AI Research",
-      imageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop&crop=smart"
-    },
-    {
-      id: "8",
-      title: "Robotics Company Boston Dynamics Unveils Humanoid Robot for Healthcare",
-      description: "Atlas Healthcare Edition can assist medical professionals with patient care and perform basic diagnostic procedures.",
-      url: "#",
-      publishedAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-      source: "IEEE Spectrum",
-      imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=400&fit=crop&crop=smart"
-    }
-  ];
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    // Simulate API loading
-    const timer = setTimeout(() => {
-      setArticles(mockNews);
-      setLoading(false);
-    }, 1000);
+    const fetchNews = async () => {
+      try {
+        const newsdataURL = `https://newsdata.io/api/1/news?apikey=${API_KEYS.newsdata}&q=artificial+intelligence&language=en`;
+        const newsapiURL = `https://newsapi.org/v2/everything?q=artificial+intelligence&language=en&apiKey=${API_KEYS.newsapi}`;
+        const gnewsURL = `https://gnews.io/api/v4/search?q=artificial+intelligence&lang=en&token=${API_KEYS.gnews}`;
 
-    return () => clearTimeout(timer);
+        const [res1, res2, res3] = await Promise.allSettled([
+          fetch(newsdataURL).then(r => r.json()),
+          fetch(newsapiURL).then(r => r.json()),
+          fetch(gnewsURL).then(r => r.json()),
+        ]);
+
+        const merged: NewsArticle[] = [];
+
+        if (res1.status === "fulfilled" && res1.value?.results) {
+          merged.push(
+            ...res1.value.results.map((item: any, idx: number) => ({
+              id: item.article_id || `nd-${idx}`,
+              title: item.title,
+              description: item.description,
+              url: item.link,
+              publishedAt: item.pubDate,
+              source: item.source_id || "NewsData",
+              imageUrl: item.image_url,
+            }))
+          );
+        }
+
+        if (res2.status === "fulfilled" && res2.value?.articles) {
+          merged.push(
+            ...res2.value.articles.map((item: any, idx: number) => ({
+              id: item.url || `na-${idx}`,
+              title: item.title,
+              description: item.description,
+              url: item.url,
+              publishedAt: item.publishedAt,
+              source: item.source?.name || "NewsAPI",
+              imageUrl: item.urlToImage,
+            }))
+          );
+        }
+
+        if (res3.status === "fulfilled" && res3.value?.articles) {
+          merged.push(
+            ...res3.value.articles.map((item: any, idx: number) => ({
+              id: item.url || `gn-${idx}`,
+              title: item.title,
+              description: item.description,
+              url: item.url,
+              publishedAt: item.publishedAt,
+              source: item.source?.name || "GNews",
+              imageUrl: item.image,
+            }))
+          );
+        }
+
+        // filter hanya yang ada image
+        const filtered = merged.filter(
+          (a) => a.imageUrl && a.imageUrl.trim() !== ""
+        );
+
+        // urutkan berdasarkan waktu terbaru
+        filtered.sort(
+          (a, b) =>
+            new Date(b.publishedAt).getTime() -
+            new Date(a.publishedAt).getTime()
+        );
+
+        setAllArticles(filtered);
+        setCurrentPage(1); // reset ke halaman pertama
+      } catch (error) {
+        console.error("Error fetching news:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
   }, []);
+
+  // update articles tiap kali ganti halaman
+  useEffect(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    setArticles(allArticles.slice(start, end));
+  }, [allArticles, currentPage]);
 
   const searchNews = (query: string) => {
     if (!query.trim()) {
-      setArticles(mockNews);
+      setAllArticles(allArticles); // reset
+      setCurrentPage(1);
       return;
     }
 
-    const filtered = mockNews.filter(article =>
-      article.title.toLowerCase().includes(query.toLowerCase()) ||
-      article.description?.toLowerCase().includes(query.toLowerCase()) ||
-      article.source.toLowerCase().includes(query.toLowerCase())
+    const filtered = allArticles.filter(
+      (article) =>
+        article.title.toLowerCase().includes(query.toLowerCase()) ||
+        article.description?.toLowerCase().includes(query.toLowerCase()) ||
+        article.source.toLowerCase().includes(query.toLowerCase())
     );
 
-    setArticles(filtered);
+    setAllArticles(filtered);
+    setCurrentPage(1); // balik ke halaman pertama setelah search
   };
 
-  return { articles, loading, searchNews };
+  return {
+    articles,
+    loading,
+    searchNews,
+    currentPage,
+    setCurrentPage,
+    totalPages: Math.ceil(allArticles.length / ITEMS_PER_PAGE),
+  };
 };
