@@ -1,28 +1,17 @@
-import { useState } from "react";
+// import { useState, useEffect } from "react";
 import { NewsCard } from "../components/NewsCard";
 import { SearchBar } from "../components/SearchBar";
 import { LoadingCard } from "../components/LoadingCard";
 import { useNews } from "../hooks/useNews";
 import { Newspaper, Sparkles } from "lucide-react";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink } from "../components/ui/pagination";
-
+import { Pagination } from "../components/ui/pagination";
 
 const Index = () => {
-  const { articles, loading, searchNews } = useNews();
-
-  // pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const articlesPerPage = 6;
-
-  // hitung index untuk slice
-  const indexOfLastArticle = currentPage * articlesPerPage;
-  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
-  const currentArticles = articles.slice(indexOfFirstArticle, indexOfLastArticle);
-
-  const totalPages = Math.ceil(articles.length / articlesPerPage);
+  // Hook useNews sekarang mengelola semua state pagination
+  const { articles, loading, searchNews, currentPage, setCurrentPage, totalPages } = useNews();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Header */}
       <header className="bg-news-gradient text-primary-foreground py-16 px-6">
         <div className="max-w-6xl mx-auto text-center">
@@ -32,14 +21,14 @@ const Index = () => {
             <Sparkles className="w-8 h-8" />
           </div>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Stay update with the latest news in Artificial Intelligence from sources
+            Stay updated with the latest news in Artificial Intelligence from top sources
           </p>
           <SearchBar onSearch={searchNews} />
         </div>
       </header>
 
-      {/* News Grid */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      {/* News Content */}
+      <main className="flex-1 max-w-6xl mx-auto px-6 py-12 w-full">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-foreground mb-2">Latest AI Headlines</h2>
           <p className="text-muted-foreground">
@@ -47,76 +36,17 @@ const Index = () => {
           </p>
         </div>
 
-        {loading ? (
+        {/* Loading State */}
+        {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }, (_, i) => (
               <LoadingCard key={i} />
             ))}
           </div>
-        ) : articles.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentArticles.map((article) => (
-                <NewsCard
-                  key={article.id}
-                  title={article.title}
-                  description={article.description}
-                  url={article.url}
-                  publishedAt={article.publishedAt}
-                  source={article.source}
-                  imageUrl={article.imageUrl}
-                />
-              ))}
-            </div>
+        )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-8">
-                <Pagination className="mt-6">
-        <PaginationContent>
-          {/* Tombol Previous */}
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              onClick={(e) => {
-                e.preventDefault()
-                if (currentPage > 1) setCurrentPage(currentPage - 1)
-              }}
-            />
-          </PaginationItem>
-
-          {/* Nomor halaman */}
-          {[...Array(totalPages)].map((_, index) => (
-            <PaginationItem key={index}>
-              <PaginationLink
-                href="#"
-                isActive={currentPage === index + 1}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setCurrentPage(index + 1)
-                }}
-              >
-                {index + 1}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-
-          {/* Tombol Next */}
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              onClick={(e) => {
-                e.preventDefault()
-                if (currentPage < totalPages) setCurrentPage(currentPage + 1)
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-              </div>
-            )}
-          </>
-        ) : (
+        {/* Empty State */}
+        {!loading && articles.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Newspaper className="w-8 h-8 text-muted-foreground" />
@@ -127,15 +57,30 @@ const Index = () => {
             </p>
           </div>
         )}
+
+        {/* Articles & Pagination */}
+        {!loading && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles.map((article) => (
+                <NewsCard key={article.id} {...article} />
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border bg-card mt-16">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>© 2025 AI News Portal. Jonathan Wijaya</p>
-            <p className="mt-1">Dibuat dengan React, TypeScript, dan Tailwindcss</p>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-muted-foreground">
+          <p>© 2025 AI News Portal. Jonathan Wijaya</p>
+          <p className="mt-1">Built with React, TypeScript, and TailwindCSS</p>
         </div>
       </footer>
     </div>
