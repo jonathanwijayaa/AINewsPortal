@@ -13,7 +13,6 @@ export interface NewsArticle {
 export const useNews = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Data Dummy nnti diganti dengan API
   const mockNews: NewsArticle[] = [
@@ -116,5 +115,5 @@ export const useNews = () => {
     setArticles(filtered);
   };
 
-  return { articles, loading, error, searchNews };
+  return { articles, loading, searchNews };
 };
