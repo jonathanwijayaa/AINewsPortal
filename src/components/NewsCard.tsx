@@ -18,16 +18,21 @@ export const NewsCard = ({
   source,
   imageUrl 
 }: NewsCardProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return "1 day ago";
-    return `${Math.floor(diffInHours / 24)} days ago`;
-  };
+  const parseDate = (dateString: string): string => {
+  if (!dateString) return "Unknown date";
+
+  const parsedDate = new Date(dateString);
+
+  if (isNaN(parsedDate.getTime())) {
+    return "Unknown date"; // fallback kalau tetap gagal
+  }
+
+  return parsedDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
   return (
     <Card className="group overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border bg-card">
@@ -54,7 +59,7 @@ export const NewsCard = ({
             </span>
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {formatDate(publishedAt)}
+              {parseDate(publishedAt)}
             </div>
           </div>
           
