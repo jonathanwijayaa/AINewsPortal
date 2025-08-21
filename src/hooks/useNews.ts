@@ -29,8 +29,8 @@ export const useNews = () => {
     const fetchNews = async () => {
       try {
         const newsdataURL = `https://newsdata.io/api/1/news?apikey=${API_KEYS.newsdata}&q=artificial+intelligence&language=en&size=10`;
-        const newsapiURL = `https://newsapi.org/v2/everything?q=artificial+intelligence&language=en&apiKey=${API_KEYS.newsapi}&pageSize=50`;
-        const gnewsURL = `https://gnews.io/api/v4/search?q=artificial+intelligence&lang=en&token=${API_KEYS.gnews}`;
+        const newsapiURL = `https://newsapi.org/v2/everything?q=artificial+intelligence&language=en&apiKey=${API_KEYS.newsapi}&pageSize=100`;
+        const gnewsURL = `https://gnews.io/api/v4/search?q=artificial+intelligence&lang=en&token=${API_KEYS.gnews}max=10`;
 
         const [res1, res2, res3] = await Promise.allSettled([
           fetch(newsdataURL).then(r => r.json()),
