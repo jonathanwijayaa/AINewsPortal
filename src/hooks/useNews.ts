@@ -20,9 +20,10 @@ const ITEMS_PER_PAGE = 6;
 
 export const useNews = () => {
   const [allArticles, setAllArticles] = useState<NewsArticle[]>([]);
-  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [displayedArticles, setDisplayedArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -82,19 +83,15 @@ export const useNews = () => {
         }
 
         // filter hanya yang ada image
-        const filtered = merged.filter(
-          (a) => a.imageUrl && a.imageUrl.trim() !== ""
-        );
+        const filtered = merged.filter(a => a.imageUrl && a.imageUrl.trim() !== "");
 
         // urutkan berdasarkan waktu terbaru
         filtered.sort(
-          (a, b) =>
-            new Date(b.publishedAt).getTime() -
-            new Date(a.publishedAt).getTime()
+          (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
         );
 
         setAllArticles(filtered);
-        setCurrentPage(1); // reset ke halaman pertama
+        setCurrentPage(1);
       } catch (error) {
         console.error("Error fetching news:", error);
       } finally {
@@ -105,37 +102,45 @@ export const useNews = () => {
     fetchNews();
   }, []);
 
-  // update articles tiap kali ganti halaman
+  // update displayedArticles tiap kali allArticles, query, atau halaman berubah
   useEffect(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    setArticles(allArticles.slice(start, end));
-  }, [allArticles, currentPage]);
+    let filtered = allArticles;
 
-  const searchNews = (query: string) => {
-    if (!query.trim()) {
-      setAllArticles(allArticles); // reset
-      setCurrentPage(1);
-      return;
+    if (query.trim()) {
+      filtered = allArticles.filter(
+        (article) =>
+          article.title.toLowerCase().includes(query.toLowerCase()) ||
+          article.description?.toLowerCase().includes(query.toLowerCase()) ||
+          article.source.toLowerCase().includes(query.toLowerCase())
+      );
     }
 
-    const filtered = allArticles.filter(
-      (article) =>
-        article.title.toLowerCase().includes(query.toLowerCase()) ||
-        article.description?.toLowerCase().includes(query.toLowerCase()) ||
-        article.source.toLowerCase().includes(query.toLowerCase())
-    );
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
 
-    setAllArticles(filtered);
-    setCurrentPage(1); // balik ke halaman pertama setelah search
+    setDisplayedArticles(filtered.slice(start, end));
+  }, [allArticles, query, currentPage]);
+
+  const searchNews = (q: string) => {
+    setQuery(q);
+    setCurrentPage(1);
   };
 
   return {
-    articles,
+    articles: displayedArticles,
     loading,
     searchNews,
     currentPage,
     setCurrentPage,
-    totalPages: Math.ceil(allArticles.length / ITEMS_PER_PAGE),
+    totalPages: Math.ceil(
+      (query
+        ? allArticles.filter(
+            (article) =>
+              article.title.toLowerCase().includes(query.toLowerCase()) ||
+              article.description?.toLowerCase().includes(query.toLowerCase()) ||
+              article.source.toLowerCase().includes(query.toLowerCase())
+          ).length
+        : allArticles.length) / ITEMS_PER_PAGE
+    ),
   };
 };

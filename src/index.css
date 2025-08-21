@@ -29,7 +29,7 @@
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 15% 88%;
-    --input: 220 15% 92%;
+    --input: 0 0% 10%;
     --ring: 210 90% 55%;
 
     --news-gradient: linear-gradient(135deg, hsl(220, 85%, 25%) 0%, hsl(210, 90%, 55%) 100%);
